@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-using System.Threading;
 
 public class LightController : MonoBehaviour
 {
@@ -13,8 +12,6 @@ public class LightController : MonoBehaviour
     private Time currTime;
     private float sleepStart;
     private float sleepEnd;
-    private Color sleepColor = Color.red;
-    private Color wakeUpColor = Color.blue;
 
     public Time StartTime
     {
@@ -52,11 +49,11 @@ public class LightController : MonoBehaviour
         float duration = (sleepEnd - sleepStart)/2;
 
         if (simHrs < sleepStart)
-            light.color = wakeUpColor;
+            light.color = Constants.WAKEUP_COLOR;
         else if (simHrs < (sleepStart + duration))
         {
             float m_t = Mathf.PingPong(Time.time, duration) / duration;
-            light.color = Color.Lerp(wakeUpColor, sleepColor, m_t);
+            light.color = Color.Lerp(Constants.WAKEUP_COLOR, Constants.SLEEP_COLOR, m_t);
             float phi = (simHrs - sleepStart) / duration * Mathf.PI;
             float amplitude = (Mathf.Cos(phi) * 0.5F + 0.5F) * 4;
             light.intensity = amplitude;
@@ -67,7 +64,7 @@ public class LightController : MonoBehaviour
         }
         else
         {
-            light.color = wakeUpColor;
+            light.color = Constants.WAKEUP_COLOR;
             light.intensity = 4;
         }
     

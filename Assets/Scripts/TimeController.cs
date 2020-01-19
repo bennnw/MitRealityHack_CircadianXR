@@ -6,7 +6,6 @@ public class TimeController : MonoBehaviour
 {
     private static float seconds;
     private static float simHrs;
-    
 
     public float SimHrs
     {
