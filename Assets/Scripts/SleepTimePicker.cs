@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -8,9 +10,39 @@ public class SleepTimePicker : MonoBehaviour
     private GameObject startPickTime;
     private GameObject noSelection;
     private GameObject startButton;
+    private GameObject confirmButton;
 
     private static float seconds = 0;
     private static float hours = 0;
+
+    private float sleepStartTime;
+    private float sleepEndTime;
+    private float flightStartTime = 7;
+    private float flightEndTime = 8 + 12;
+
+    public float SleepStartTime
+    {
+        get { return sleepStartTime; }
+        set { sleepStartTime = value; }
+    }
+
+    public float SleepEndTime
+    {
+        get { return sleepEndTime; }
+        set { sleepEndTime = value; }
+    }
+
+    public float FlightStartTime
+    {
+        get { return flightStartTime; }
+        set { flightStartTime = value; }
+    }
+
+    public float FlightEndTime
+    {
+        get { return flightEndTime; }
+        set { flightEndTime = value; }
+    }
 
     private List<string> imgNameList = new List<string>();
     private List<GameObject> imgObjectList = new List<GameObject>();
@@ -23,6 +55,7 @@ public class SleepTimePicker : MonoBehaviour
         this.startPickTime = GameObject.Find(Constants.START_PICK_TIME);
         this.noSelection = GameObject.Find(Constants.NO_SELECTION);
         this.startButton = GameObject.Find(Constants.START_BUTTON);
+        this.confirmButton = GameObject.Find(Constants.CONFIRM_BUTTON);
 
         InitializeImgNameList();
         InitializeImgObjList();
@@ -126,6 +159,7 @@ public class SleepTimePicker : MonoBehaviour
         Debug.Log("Start picking your regular sleeping time now ...");
         noSelection.SetActive(true);
         SetDefaultHours();
+        SetupConfirmButton();
     }
 
     private void SetDefaultHours()
@@ -180,6 +214,96 @@ public class SleepTimePicker : MonoBehaviour
             selectedList.Add(imgName);
             imgObjectList[index].SetActive(true);
             Debug.Log(imgName + " is selected");
+        }
+    }
+
+    private void SetupConfirmButton()
+    {
+        EventTrigger eventTrigger = confirmButton.AddComponent<EventTrigger>();
+        EventTrigger.Entry clickEntry = new EventTrigger.Entry
+        {
+            eventID = EventTriggerType.PointerClick
+        };
+        clickEntry.callback.AddListener(delegate { getSleepTime(); });
+        eventTrigger.triggers.Add(clickEntry);
+    }
+
+    private void getSleepTime()
+    {
+        List<int> timeList = new List<int>();
+        foreach (string img in selectedList)
+        {
+            int number = int.Parse(img.Replace("Img_", "")) - 1;
+            if (number < flightStartTime)
+                number = number + 12;
+            timeList.Add(number);
+        }
+        timeList.Sort();
+        foreach (int t in timeList)
+        {
+            if (t > flightStartTime)
+            {
+                sleepStartTime = t;
+                break;
+            }
+        }
+        timeList.Reverse();
+        foreach (int t in timeList)
+        {
+            if (t < flightEndTime)
+            {
+                sleepEndTime = t;
+                break;
+            }
+        }
+        sleepEndTime = sleepStartTime + (sleepEndTime - sleepStartTime) / 4 * 3;
+        sleepStartTime = sleepStartTime - flightStartTime;
+        sleepEndTime = sleepEndTime - flightStartTime;
+
+        Debug.Log(sleepStartTime);
+        Debug.Log(sleepEndTime);
+        WriteUserFile();
+    }
+
+    private void WriteUserFile()
+    {
+        string path = Constants.USER_FILE;
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+        try
+        {
+            using (StreamWriter writer = File.CreateText(path))
+            {
+                writer.WriteLine("[SleepStartTime] " + sleepStartTime);
+                writer.WriteLine("[SleepEndTime] " + sleepEndTime);
+            }
+        } catch (Exception e)
+        {
+            Debug.Log(e);
+        }
+    }
+
+    private void ReadFlightFile()
+    {
+        string path = Constants.FLIGHT_FILE;
+        try
+        {
+            using (StreamReader reader = new StreamReader(path))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.Contains("[FlightStartTime]"))
+                        flightStartTime = int.Parse(line.Replace("[FlightStartTime]", "").Trim());
+                    else if (line.Contains("[FlightEndTime]"))
+                        flightEndTime = int.Parse(line.Replace("[FlightEndTime]", "").Trim());
+                }
+            }
+        } catch (Exception e)
+        {
+            Debug.Log(e);
         }
     }
 }
