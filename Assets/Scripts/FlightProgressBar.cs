@@ -20,9 +20,9 @@ public class FlightProgressBar : MonoBehaviour
         l = (end - start) / 2;
         tDusk = 2 * t0 * l / t;
         tDawn = 2 * t1 / t - 1;
-        Debug.Log("Flight: " + l);
-        Debug.Log("Dusk: " + tDusk);
-        Debug.Log("Dawn: " + tDawn);
+        // Debug.Log("Flight: " + l);
+        // Debug.Log("Dusk: " + tDusk);
+        // Debug.Log("Dawn: " + tDawn);
         sm1 = smCity1.transform.localScale;
         sm1.x = (l - tDusk) * 2;
         smCity1.transform.localScale = sm1;
